@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AO Assist｜学生アルバイト 扶養チェッカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Shippori+Mincho:wght@600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --sage:#2e6b50;--sage-light:#e8f4ee;--sage-mid:#4a8a6a;
+  --warm:#c8702a;--warm-light:#fdf3eb;
+  --navy:#1a1a2e;--ink:#2a2a3e;--ink-soft:#6a6a8a;
+  --paper:#fafaf8;--paper-dark:#f0efe9;--border:#dcdbd3;
+  --white:#fff;--red:#b94040;--red-light:#fde8e8;
+  --blue:#2c5fa8;--blue-light:#e8eef8;
+  --yellow:#d4a017;--yellow-light:#fef9e7;
+  --pink:#e8829a;--pink-light:#fef0f3;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--paper-dark);color:var(--ink);font-size:13px;line-height:1.8;min-height:100vh;}
+
+.app-header{background:white;border-bottom:3px solid var(--sage);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.08);}
+.logo-wrap{display:flex;align-items:center;gap:10px;}
+.app-title{font-size:13px;font-weight:900;color:var(--navy);}
+.app-sub{font-size:9px;color:var(--ink-soft);}
+.header-badge{background:var(--sage-light);border:1.5px solid var(--sage);border-radius:16px;padding:4px 12px;font-size:10px;font-weight:700;color:var(--sage);}
+
+.hero{background:linear-gradient(135deg,var(--navy) 0%,#2d3561 50%,var(--sage) 100%);padding:24px 20px 28px;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:var(--warm);border-radius:50%;opacity:.08;}
+.hero-icon{font-size:32px;margin-bottom:6px;}
+.hero-title{font-family:'Shippori Mincho',serif;font-size:19px;font-weight:600;color:white;margin-bottom:6px;}
+.hero-desc{font-size:11px;color:rgba(255,255,255,.75);line-height:1.8;max-width:420px;margin:0 auto 12px;}
+.hero-tags{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;}
+.hero-tag{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:12px;padding:3px 10px;font-size:10px;color:rgba(255,255,255,.9);font-weight:700;}
+
+.main{max-width:720px;margin:0 auto;padding:18px 14px 60px;}
+
+/* 重要告知ボックス */
+.news-box{background:white;border-radius:14px;border:2.5px solid var(--sage);padding:14px 16px;margin-bottom:16px;box-shadow:0 2px 12px rgba(46,107,80,.12);}
+.news-title{font-size:12px;font-weight:900;color:var(--sage);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.news-badge{background:var(--sage);color:white;border-radius:10px;padding:2px 8px;font-size:9px;font-weight:700;}
+.age-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.age-card{border-radius:10px;padding:12px;text-align:center;}
+.age-card.young{background:var(--pink-light);border:2px solid var(--pink);}
+.age-card.other{background:var(--paper-dark);border:2px solid var(--border);}
+.age-card-title{font-size:10px;font-weight:700;margin-bottom:6px;}
+.age-card-title.young{color:var(--pink);}
+.age-card-title.other{color:var(--ink-soft);}
+.age-wall{font-size:20px;font-weight:900;line-height:1.2;}
+.age-wall.young{color:var(--pink);}
+.age-wall.other{color:var(--ink-soft);}
+.age-note{font-size:9px;margin-top:4px;line-height:1.5;}
+.age-note.young{color:var(--pink);}
+.age-note.other{color:var(--ink-soft);}
+
+/* 2つの壁の説明 */
+.wall-box{background:white;border-radius:14px;border:2px solid var(--border);padding:14px 16px;margin-bottom:16px;}
+.wall-title{font-size:12px;font-weight:900;color:var(--warm);margin-bottom:10px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.wall-card{border-radius:10px;padding:12px;text-align:center;}
+.wall-card.tax{background:var(--blue-light);border:1.5px solid var(--blue);}
+.wall-card.ins{background:var(--sage-light);border:1.5px solid var(--sage);}
+.wall-icon{font-size:20px;margin-bottom:4px;}
+.wall-name{font-size:10px;font-weight:700;margin-bottom:4px;}
+.wall-name.tax{color:var(--blue);}
+.wall-name.ins{color:var(--sage);}
+.wall-amount{font-size:17px;font-weight:900;line-height:1.2;}
+.wall-amount.tax{color:var(--blue);}
+.wall-amount.ins{color:var(--sage);}
+.wall-note{font-size:9px;margin-top:3px;line-height:1.5;}
+
+/* セクション */
+.section{background:white;border-radius:14px;box-shadow:0 2px 14px rgba(0,0,0,.06);overflow:hidden;margin-bottom:16px;}
+.section-head{padding:10px 16px;font-size:12px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.section-head.green{background:var(--sage);color:white;}
+.section-head.warm{background:var(--warm);color:white;}
+.section-head.navy{background:var(--navy);color:white;}
+.section-head.blue{background:var(--blue);color:white;}
+.section-body{padding:16px;}
+
+/* フォーム */
+.form-group{margin-bottom:14px;}
+.form-label{font-size:11px;font-weight:700;color:var(--ink-soft);margin-bottom:5px;display:flex;align-items:center;gap:4px;}
+.req{color:var(--red);font-size:9px;}
+.form-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:13px;font-weight:700;color:var(--ink);background:var(--paper);-webkit-appearance:none;}
+.form-input:focus{outline:none;border-color:var(--sage);background:white;}
+.input-with-unit{display:flex;align-items:center;gap:6px;}
+.input-unit{font-size:12px;font-weight:700;color:var(--ink-soft);white-space:nowrap;}
+.form-select{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:inherit;font-size:12px;font-weight:700;color:var(--ink);background:var(--paper);-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23666' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;}
+.form-select:focus{outline:none;border-color:var(--sage);}
+.shift-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* 年齢による切り替え説明 */
+.age-hint{background:var(--pink-light);border:1px solid var(--pink);border-radius:8px;padding:8px 12px;font-size:10px;margin-top:6px;line-height:1.7;display:none;}
+.age-hint.show{display:block;}
+
+.calc-btn{width:100%;padding:13px;background:var(--sage);color:white;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;letter-spacing:.05em;margin-top:4px;}
+.calc-btn:active{opacity:.85;}
+
+/* 結果 */
+.result-area{display:none;}
+.result-area.visible{display:block;}
+
+.judgment-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.judgment-card{border-radius:12px;padding:14px;text-align:center;}
+.judgment-card.ok{background:var(--sage-light);border:2px solid var(--sage);}
+.judgment-card.warn{background:var(--yellow-light);border:2px solid var(--yellow);}
+.judgment-card.ng{background:var(--red-light);border:2px solid var(--red);}
+.j-icon{font-size:22px;margin-bottom:4px;}
+.j-type{font-size:10px;font-weight:700;margin-bottom:4px;}
+.j-type.tax{color:var(--blue);}
+.j-type.ins{color:var(--sage);}
+.j-status{font-size:13px;font-weight:900;margin-bottom:4px;}
+.j-status.ok{color:var(--sage);}
+.j-status.warn{color:var(--yellow);}
+.j-status.ng{color:var(--red);}
+.j-note{font-size:9px;color:var(--ink-soft);line-height:1.6;}
+
+.gauge-wrap{margin-bottom:12px;}
+.gauge-label{font-size:10px;font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between;}
+.gauge-track{height:24px;border-radius:6px;background:#eee;position:relative;overflow:hidden;margin-bottom:3px;}
+.gauge-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;min-width:8px;transition:width .6s ease;}
+.gauge-fill span{font-size:9px;font-weight:900;color:white;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.3);}
+.gauge-marks{display:flex;justify-content:space-between;font-size:8px;color:var(--ink-soft);}
+.gauge-remain{font-size:10px;font-weight:700;text-align:right;margin-top:2px;}
+
+/* タイムライン */
+.tl-track{display:flex;border-radius:8px;overflow:hidden;height:26px;margin-bottom:4px;}
+.tl-month{flex:1;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;border-right:1px solid rgba(255,255,255,.3);}
+.tl-month:last-child{border-right:none;}
+.tl-month.safe{background:var(--sage);color:white;}
+.tl-month.warn{background:var(--yellow);color:white;}
+.tl-month.over{background:var(--red);color:white;}
+.tl-month.neutral{background:#e0e0e0;color:#888;}
+.tl-labels{display:flex;justify-content:space-between;font-size:8px;color:var(--ink-soft);}
+.tl-legend{display:flex;gap:10px;margin-top:6px;font-size:9px;flex-wrap:wrap;}
+.tl-legend-item{display:flex;align-items:center;gap:4px;}
+.tl-dot{width:10px;height:10px;border-radius:3px;}
+
+.advice-box{border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:11px;line-height:1.8;}
+.advice-box.green{background:var(--sage-light);border-left:4px solid var(--sage);}
+.advice-box.yellow{background:var(--yellow-light);border-left:4px solid var(--yellow);}
+.advice-box.red{background:var(--red-light);border-left:4px solid var(--red);}
+.advice-box.blue{background:var(--blue-light);border-left:4px solid var(--blue);}
+.advice-box.pink{background:var(--pink-light);border-left:4px solid var(--pink);}
+.advice-title{font-weight:900;font-size:11px;margin-bottom:4px;}
+
+.manager-box{background:var(--navy);color:white;border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+.manager-title{font-size:11px;font-weight:700;color:rgba(255,255,255,.7);margin-bottom:8px;}
+.manager-content{font-size:12px;line-height:1.9;}
+.manager-hl{color:#a5d6a7;font-weight:700;}
+.manager-warn{color:#ffcc80;font-weight:700;}
+
+.faq-item{border-bottom:1px solid var(--paper-dark);padding:10px 0;}
+.faq-item:last-child{border-bottom:none;}
+.faq-q{font-size:12px;font-weight:700;color:var(--sage);cursor:pointer;display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+.faq-q.open::after{content:'▲';font-size:10px;}
+.faq-q::after{content:'▼';font-size:10px;flex-shrink:0;}
+.faq-a{font-size:11px;color:var(--ink-soft);line-height:1.8;margin-top:6px;display:none;}
+.faq-a.open{display:block;}
+
+.footnote{font-size:10px;color:var(--ink-soft);line-height:1.8;text-align:center;margin-top:24px;padding:12px;background:white;border-radius:10px;}
+
+@media(max-width:480px){
+  .two-col,.judgment-grid,.shift-grid,.age-grid{grid-template-columns:1fr;}
+  .hero-title{font-size:16px;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="logo-wrap">
+    <div style="background:#f5f5f0;border-radius:6px;padding:3px 8px;font-size:11px;font-weight:900;color:var(--sage);">🌿 AO Assist</div>
+    <div>
+      <div class="app-title">学生アルバイト 扶養チェッカー</div>
+      <div class="app-sub">AIと経理で、仕事も暮らしも軽やかに。</div>
+    </div>
+  </div>
+  <div class="header-badge">2025年10月改正対応版</div>
+</div>
+
+<div class="hero">
+  <div class="hero-icon">🎓</div>
+  <div class="hero-title">学生バイトの「壁」、全部わかる</div>
+  <div class="hero-desc">2025年10月から学生の社保基準が変わりました。税金と社保の壁は別物です。シフトを入力するだけで自動計算します。</div>
+  <div class="hero-tags">
+    <span class="hero-tag">📊 税扶養チェック</span>
+    <span class="hero-tag">🏥 社保扶養チェック</span>
+    <span class="hero-tag">📅 月別タイムライン</span>
+    <span class="hero-tag">👔 店長向けアドバイス</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- 2025年10月改正の告知 -->
+  <div class="news-box">
+    <div class="news-title">
+      🆕 2025年10月改正
+      <span class="news-badge">重要</span>
+    </div>
+    <div class="age-grid">
+      <div class="age-card young">
+        <div class="age-card-title young">🎓 19〜22歳（大学生世代）</div>
+        <div class="age-wall young">150万円</div>
+        <div style="font-size:9px;color:var(--pink);font-weight:700;margin-top:2px;">税金も社保も！</div>
+        <div class="age-note young">2025年10月〜<br>社保の壁も150万円に引き上げ</div>
+      </div>
+      <div class="age-card other">
+        <div class="age-card-title other">👤 〜18歳・23歳〜</div>
+        <div class="age-wall other">130万円</div>
+        <div style="font-size:9px;color:var(--ink-soft);font-weight:700;margin-top:2px;">社保の壁は変わらず</div>
+        <div class="age-note other">社保：130万円のまま<br>税の壁は103万円</div>
+      </div>
+    </div>
+    <div style="background:var(--yellow-light);border-radius:8px;padding:8px 12px;font-size:10px;line-height:1.8;color:var(--ink);">
+      ⚠️ <strong>23歳の誕生日を迎えた翌年から社保の壁は130万円に戻ります。</strong><br>
+      また「学生かどうか」ではなく<strong>年齢（19〜22歳）</strong>で判定されます。
+    </div>
+  </div>
+
+  <!-- 2つの壁の説明 -->
+  <div class="wall-box">
+    <div class="wall-title">⚠️ 「税金の壁」と「社保の壁」は別物です</div>
+    <div class="two-col">
+      <div class="wall-card tax">
+        <div class="wall-icon">🧾</div>
+        <div class="wall-name tax">① 税金の扶養</div>
+        <div class="wall-amount tax">150万円</div>
+        <div class="wall-note">親の税金に関わる壁<br>特定扶養控除・特定親族特別控除<br>19〜22歳は150万円まで親の控除額が維持</div>
+      </div>
+      <div class="wall-card ins">
+        <div class="wall-icon">🏥</div>
+        <div class="wall-name ins">② 社会保険の扶養</div>
+        <div class="wall-amount ins">19〜22歳：150万円<br style="font-size:9px;">それ以外：130万円</div>
+        <div class="wall-note">健康保険の壁<br>2025年10月〜19〜22歳は150万円に拡大<br>「見込み年収」で判定</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding:8px 10px;background:#fff8f5;border-radius:8px;font-size:10px;line-height:1.8;color:var(--ink);">
+      💡 <strong>例：19歳の学生が年収140万円の場合</strong><br>
+      税金面 → ✅ 150万円以内なのでOK<br>
+      社保面 → ✅ 2025年10月〜150万円に引き上げられたのでOK<br>
+      <strong style="color:var(--sage);">→ 19〜22歳は両方150万円がボーダー！</strong>
+    </div>
+  </div>
+
+  <!-- 入力フォーム -->
+  <div class="section">
+    <div class="section-head green">📝 シフト情報を入力してください</div>
+    <div class="section-body">
+
+      <div class="form-group">
+        <div class="form-label">年齢 <span class="req">必須</span></div>
+        <select class="form-select" id="ageGroup" onchange="onAgeChange()">
+          <option value="">選んでください</option>
+          <option value="young">19〜22歳（大学生世代）</option>
+          <option value="other">〜18歳 または 23歳以上</option>
+        </select>
+        <div class="age-hint" id="ageHint">
+          🎉 19〜22歳は2025年10月から社保の壁も<strong>150万円</strong>に引き上げられました！
+        </div>
+      </div>
+
+      <div class="shift-grid">
+        <div class="form-group">
+          <div class="form-label">時給 <span class="req">必須</span></div>
+          <div class="input-with-unit">
+            <input type="number" class="form-input" id="wage" placeholder="例：1100" min="800" max="5000">
+            <span class="input-unit">円</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">週の勤務日数 <span class="req">必須</span></div>
+          <select class="form-select" id="weekDays" onchange="updateWeekHours()">
+            <option value="">選んでください</option>
+            <option value="1">週1日</option>
+            <option value="2">週2日</option>
+            <option value="3">週3日</option>
+            <option value="4">週4日</option>
+            <option value="5">週5日</option>
+            <option value="6">週6日</option>
+            <option value="7">週7日</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="shift-grid">
+        <div class="form-group">
+          <div class="form-label">1日の勤務時間 <span class="req">必須</span></div>
+          <div class="input-with-unit">
+            <input type="number" class="form-input" id="dayHours" placeholder="例：5" min="1" max="12" step="0.5" oninput="updateWeekHours()">
+            <span class="input-unit">時間</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <div class="form-label">週の労働時間（自動計算）</div>
+          <div class="input-with-unit">
+            <input type="text" class="form-input" id="weekHoursDisp" placeholder="日数×時間で自動表示" readonly
+              style="background:var(--sage-light);color:var(--sage);font-weight:700;">
+            <span class="input-unit">時間</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="shift-grid">
+        <div class="form-group">
+          <div class="form-label">今年の勤務開始月</div>
+          <select class="form-select" id="startMonth">
+            <option value="1">1月から</option><option value="2">2月から</option>
+            <option value="3">3月から</option><option value="4">4月から</option>
+            <option value="5">5月から</option><option value="6" selected>6月から</option>
+            <option value="7">7月から</option><option value="8">8月から</option>
+            <option value="9">9月から</option><option value="10">10月から</option>
+            <option value="11">11月から</option><option value="12">12月から</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">今年すでに働いた収入</div>
+          <div class="input-with-unit">
+            <input type="number" class="form-input" id="prevIncome" placeholder="例：300000" min="0">
+            <span class="input-unit">円</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="form-label">職場の規模</div>
+        <select class="form-select" id="companySize">
+          <option value="small">中小企業・飲食店など（〜100人）</option>
+          <option value="large">大企業（101人以上）</option>
+        </select>
+      </div>
+
+      <button class="calc-btn" onclick="calculate()">📊 扶養チェックをする</button>
+    </div>
+  </div>
+
+  <!-- 結果エリア -->
+  <div class="result-area" id="resultArea">
+
+    <div class="section">
+      <div class="section-head navy">📊 チェック結果</div>
+      <div class="section-body">
+        <div class="judgment-grid" id="judgmentGrid"></div>
+        <div id="annualIncome" style="text-align:center;font-size:11px;color:var(--ink-soft);padding:6px 0;border-top:1px solid var(--paper-dark);"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head green">📈 扶養ラインまでの距離</div>
+      <div class="section-body" id="gaugeSection"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head warm">📅 月別 収入タイムライン（今年）</div>
+      <div class="section-body">
+        <div class="tl-track" id="tlTrack"></div>
+        <div class="tl-labels" id="tlLabels"></div>
+        <div class="tl-legend">
+          <div class="tl-legend-item"><div class="tl-dot" style="background:var(--sage)"></div>安全</div>
+          <div class="tl-legend-item"><div class="tl-dot" style="background:var(--yellow)"></div>注意</div>
+          <div class="tl-legend-item"><div class="tl-dot" style="background:var(--red)"></div>超過</div>
+          <div class="tl-legend-item"><div class="tl-dot" style="background:#e0e0e0"></div>開始前</div>
+        </div>
+        <div id="tlNote" style="font-size:10px;color:var(--ink-soft);margin-top:6px;"></div>
+      </div>
+    </div>
+
+    <div class="section" id="sec106" style="display:none;">
+      <div class="section-head blue">⚡ 106万円の壁（大企業の場合）</div>
+      <div class="section-body" id="sec106Content"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-head navy">👔 店長・経理担当者へのアドバイス</div>
+      <div class="section-body">
+        <div class="manager-box" id="managerBox"></div>
+        <div id="adviceBoxes"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head green">❓ よくある質問</div>
+      <div class="section-body" id="faqArea"></div>
+    </div>
+
+  </div>
+
+  <div class="footnote">
+    ※ 本ツールは目安の提供を目的としています。実際の判定は加入している健康保険組合・税務署の確認が必要です。<br>
+    ※ 社保150万円への引き上げは2025年10月1日〜19歳以上23歳未満が対象。健保組合によって運用が異なる場合があります。<br>
+    ※ 税制・社会保険制度の最終判断は税理士・社会保険労務士にご確認ください。<br>
+    AO Assist 代表　Kei
+  </div>
+
+</div>
+
+<script>
+function updateWeekHours(){
+  var d = parseFloat(document.getElementById('weekDays').value)||0;
+  var h = parseFloat(document.getElementById('dayHours').value)||0;
+  var disp = document.getElementById('weekHoursDisp');
+  if(disp) disp.value = (d && h) ? (d*h).toFixed(1)+' 時間/週' : '';
+}
+
+function onAgeChange() {
+  var v = document.getElementById('ageGroup').value;
+  var hint = document.getElementById('ageHint');
+  if (v === 'young') {
+    hint.className = 'age-hint show';
+  } else {
+    hint.className = 'age-hint';
+  }
+}
+
+function calculate() {
+  var ageGroup = document.getElementById('ageGroup').value;
+  var wage = parseInt(document.getElementById('wage').value) || 0;
+  var weekDaysVal = parseFloat(document.getElementById('weekDays') ? document.getElementById('weekDays').value : 0) || 0;
+  var dayHoursVal = parseFloat(document.getElementById('dayHours') ? document.getElementById('dayHours').value : 0) || 0;
+  var weekH = weekDaysVal * dayHoursVal;
+  var startM = parseInt(document.getElementById('startMonth').value);
+  var prevInc = parseInt(document.getElementById('prevIncome').value) || 0;
+  var compSize = document.getElementById('companySize').value;
+
+  if (!ageGroup) { alert('年齢を選択してください。'); return; }
+  if (!wage || !weekDaysVal || !dayHoursVal) { alert('時給・週の勤務日数・1日の勤務時間を入力してください。'); return; }
+
+  // 壁の設定（年齢で切り替え）
+  var IS_YOUNG = (ageGroup === 'young');
+  var INS_WALL = IS_YOUNG ? 1500000 : 1300000;  // 社保の壁
+  var TAX_WALL = IS_YOUNG ? 1500000 : 1030000;  // 税の壁
+  var TAX_WALL2 = IS_YOUNG ? 1880000 : 1030000; // 段階的控除上限（19〜22歳のみ）
+  var WALL_106 = 1060000;
+
+  // 年収計算
+  var monthIncome = Math.round(wage * weekH * 4.33);
+  var currentMonth = new Date().getMonth() + 1;
+  var fromMonth = Math.max(startM, currentMonth);
+  var remainMonths = 13 - fromMonth;
+  var futureIncome = monthIncome * remainMonths;
+  var totalAnnual = prevInc + futureIncome;
+
+  // 判定
+  var insOk = totalAnnual < INS_WALL;
+  var insWarn = (totalAnnual >= INS_WALL * 0.88) && (totalAnnual < INS_WALL);
+  var taxOk = totalAnnual < TAX_WALL;
+  var taxWarn = IS_YOUNG && (totalAnnual >= TAX_WALL) && (totalAnnual < TAX_WALL2);
+
+  // 年収表示
+  document.getElementById('annualIncome').innerHTML =
+    '今年の見込み年収：<strong style="font-size:15px;color:var(--navy);">' +
+    Math.round(totalAnnual).toLocaleString() + '円</strong>　（月収目安：' +
+    monthIncome.toLocaleString() + '円）';
+
+  // 判定カード
+  var insWallLabel = IS_YOUNG ? '150万円（19〜22歳）' : '130万円';
+  var taxWallLabel = IS_YOUNG ? '150万円（特定扶養控除）' : '103万円';
+
+  var insCard = buildCard('ins', insOk, insWarn, insWallLabel, totalAnnual, INS_WALL);
+  var taxCard = buildCard('tax', taxOk, taxWarn, taxWallLabel, totalAnnual, TAX_WALL);
+  document.getElementById('judgmentGrid').innerHTML = taxCard + insCard;
+
+  // ゲージ
+  buildGauges(totalAnnual, INS_WALL, TAX_WALL, IS_YOUNG);
+
+  // タイムライン
+  buildTimeline(prevInc, monthIncome, startM, INS_WALL);
+
+  // 106万チェック
+  if (compSize === 'large') {
+    document.getElementById('sec106').style.display = '';
+    var m106ok = monthIncome < 88000;
+    var h106ok = weekH < 20;
+    document.getElementById('sec106Content').innerHTML =
+      '<div class="advice-box blue">' +
+      '<div class="advice-title">📌 大企業（101人以上）の追加条件</div>' +
+      '月収見込み：' + monthIncome.toLocaleString() + '円　' +
+      '（88,000円' + (m106ok ? '未満 → ✅ OK' : '以上 → <span style="color:var(--red);font-weight:700;">要注意</span>') + '）<br>' +
+      '週の労働時間：' + weekH + '時間　' +
+      '（20時間' + (h106ok ? '未満 → ✅ OK' : '以上 → <span style="color:var(--red);font-weight:700;">社保加入対象の可能性</span>') + '）' +
+      '</div>';
+  } else {
+    document.getElementById('sec106').style.display = 'none';
+  }
+
+  // 店長アドバイス
+  buildAdvice(totalAnnual, monthIncome, INS_WALL, TAX_WALL, insOk, taxOk, IS_YOUNG, wage);
+
+  // FAQ
+  buildFaq(IS_YOUNG, compSize);
+
+  // 表示
+  document.getElementById('resultArea').className = 'result-area visible';
+  setTimeout(function() {
+    var el = document.getElementById('resultArea');
+    if (el) { el.scrollIntoView(true); }
+  }, 200);
+}
+
+function buildCard(type, ok, warn, wallLabel, total, wall) {
+  var isTax = (type === 'tax');
+  var icon = isTax ? '🧾' : '🏥';
+  var label = isTax ? '① 税金の扶養（親の税金）' : '② 社会保険の扶養（健康保険）';
+  var cardClass, statusText, noteText, statusClass;
+
+  if (ok) {
+    cardClass = 'ok'; statusClass = 'ok';
+    statusText = '✅ 安全圏';
+    noteText = '基準（' + wallLabel + '）まで余裕あり';
+  } else if (warn) {
+    cardClass = 'warn'; statusClass = 'warn';
+    statusText = '⚠️ 注意';
+    noteText = 'ラインに近づいています';
+  } else {
+    cardClass = 'ng'; statusClass = 'ng';
+    statusText = '❌ 超過';
+    noteText = '基準を超えています';
+  }
+
+  return '<div class="judgment-card ' + cardClass + '">' +
+    '<div class="j-icon">' + icon + '</div>' +
+    '<div class="j-type ' + type + '">' + label + '</div>' +
+    '<div class="j-status ' + statusClass + '">' + statusText + '</div>' +
+    '<div class="j-note">基準：' + wallLabel + '<br>' + noteText + '</div>' +
+    '</div>';
+}
+
+function buildGauges(total, insWall, taxWall, isYoung) {
+  var insP = Math.min((total / insWall) * 100, 110).toFixed(1);
+  var taxP = Math.min((total / taxWall) * 100, 110).toFixed(1);
+  var insRemain = insWall - total;
+  var taxRemain = taxWall - total;
+  var insColor = total >= insWall ? 'var(--red)' : total >= insWall * 0.88 ? 'var(--yellow)' : 'var(--sage)';
+  var taxColor = total >= taxWall ? 'var(--red)' : total >= taxWall * 0.88 ? 'var(--yellow)' : 'var(--blue)';
+  var insLabel = isYoung ? '🏥 社会保険の壁（150万円・19〜22歳）' : '🏥 社会保険の壁（130万円）';
+  var taxLabel = isYoung ? '🧾 税金の壁（150万円・特定扶養控除）' : '🧾 税金の壁（103万円）';
+
+  document.getElementById('gaugeSection').innerHTML =
+    '<div class="gauge-wrap">' +
+    '<div class="gauge-label"><span style="font-weight:700;color:var(--sage);">' + insLabel + '</span><span style="font-size:10px;color:' + insColor + ';font-weight:700;">' + insP + '%</span></div>' +
+    '<div class="gauge-track"><div class="gauge-fill" style="width:' + Math.min(parseFloat(insP), 100) + '%;background:' + insColor + ';"><span>' + Math.round(total / 10000) + '万円</span></div></div>' +
+    '<div class="gauge-marks"><span>0円</span><span>' + Math.round(insWall / 20000) + '万</span><span>' + Math.round(insWall / 10000) + '万円</span></div>' +
+    '<div class="gauge-remain" style="color:' + insColor + ';">' + (insRemain > 0 ? 'あと <strong>' + Math.round(insRemain).toLocaleString() + '円</strong> で' + Math.round(insWall / 10000) + '万円' : '<strong>' + Math.round(insWall / 10000) + '万円を超えています</strong>') + '</div>' +
+    '</div>' +
+    '<div class="gauge-wrap" style="margin-top:8px;">' +
+    '<div class="gauge-label"><span style="font-weight:700;color:var(--blue);">' + taxLabel + '</span><span style="font-size:10px;color:' + taxColor + ';font-weight:700;">' + taxP + '%</span></div>' +
+    '<div class="gauge-track"><div class="gauge-fill" style="width:' + Math.min(parseFloat(taxP), 100) + '%;background:' + taxColor + ';"><span>' + Math.round(total / 10000) + '万円</span></div></div>' +
+    '<div class="gauge-marks"><span>0円</span><span>' + Math.round(taxWall / 20000) + '万</span><span>' + Math.round(taxWall / 10000) + '万円</span></div>' +
+    '<div class="gauge-remain" style="color:' + taxColor + ';">' + (taxRemain > 0 ? 'あと <strong>' + Math.round(taxRemain).toLocaleString() + '円</strong> で' + Math.round(taxWall / 10000) + '万円' : '<strong>' + Math.round(taxWall / 10000) + '万円を超えています</strong>') + '</div>' +
+    '</div>';
+}
+
+function buildTimeline(prevInc, monthInc, startM, insWall) {
+  var track = document.getElementById('tlTrack');
+  var labels = document.getElementById('tlLabels');
+  var MONTHS = ['1','2','3','4','5','6','7','8','9','10','11','12'];
+  track.innerHTML = ''; labels.innerHTML = '';
+
+  var cumulative = 0;
+  var overMonth = null;
+
+  for (var i = 0; i < 12; i++) {
+    var mNum = i + 1;
+    var div = document.createElement('div');
+    div.className = 'tl-month';
+
+    if (mNum < startM) {
+      cumulative += (startM > 1) ? prevInc / (startM - 1) : 0;
+      div.classList.add('neutral');
+    } else {
+      cumulative += monthInc;
+      if (cumulative >= insWall) {
+        div.classList.add('over');
+        if (!overMonth) { overMonth = mNum; }
+      } else if (cumulative >= insWall * 0.88) {
+        div.classList.add('warn');
+      } else {
+        div.classList.add('safe');
+      }
+    }
+    div.textContent = MONTHS[i];
+    track.appendChild(div);
+  }
+
+  var labelArr = ['1月','','','4月','','','7月','','','10月','','12月'];
+  for (var j = 0; j < 12; j++) {
+    var span = document.createElement('span');
+    span.textContent = labelArr[j];
+    labels.appendChild(span);
+  }
+
+  var note = document.getElementById('tlNote');
+  if (overMonth) {
+    note.innerHTML = '⚠️ <span style="color:var(--red);font-weight:700;">' + overMonth + '月頃</span>に扶養ラインを超える見込みです。事前にシフト調整を検討してください。';
+  } else {
+    note.innerHTML = '✅ 今年いっぱいは扶養ライン内の見込みです。';
+  }
+}
+
+function buildAdvice(total, monthly, insWall, taxWall, insOk, taxOk, isYoung, wage) {
+  var box = document.getElementById('managerBox');
+  var advices = document.getElementById('adviceBoxes');
+  var wallLabel = isYoung ? '150万円' : '130万円';
+  var monthLimit = isYoung ? '125,000円' : '108,333円';
+
+  var msg = '';
+  if (insOk && taxOk) {
+    msg = 'このスタッフのシフトは、<span class="manager-hl">社保・税扶養ともに安全圏</span>です。現在の勤務時間を維持すれば問題ありません。';
+  } else if (!insOk) {
+    msg = '<span class="manager-warn">⚠️ 社会保険の' + wallLabel + 'ラインを超える見込みです。</span><br>本人の健保自己負担が発生します。シフト調整を検討してください。';
+  } else if (!taxOk) {
+    msg = '<span class="manager-warn">⚠️ 税扶養の' + wallLabel + 'ラインを超える見込みです。</span><br>親御さんの税金に影響が出る可能性があります。本人に確認を促してください。';
+  }
+  box.innerHTML = '<div class="manager-title">👔 店長・経理担当者へ</div><div class="manager-content">' + msg + '</div>';
+
+  var advHtml = '';
+  if (isYoung) {
+    advHtml += '<div class="advice-box pink"><div class="advice-title">🎓 19〜22歳：2025年10月改正のポイント</div>' +
+      '社保の壁が2025年10月から<strong>150万円に引き上げ</strong>られました。<br>' +
+      '税金の壁（特定扶養控除）も150万円です。<strong>両方150万円</strong>が新しいボーダーです。<br>' +
+      '23歳になった翌年から社保の壁は<strong>130万円に戻ります</strong>ので注意してください。</div>';
+  }
+  if (!insOk) {
+    advHtml += '<div class="advice-box red"><div class="advice-title">❌ 扶養ラインを超えています</div>' +
+      '月収の目安は' + monthLimit + '以内に抑えることを検討してください。<br>' +
+      '本人が健保を自己加入する場合、月1〜2万円程度の負担増になります。</div>';
+  } else if (total >= insWall * 0.88) {
+    advHtml += '<div class="advice-box yellow"><div class="advice-title">⚠️ 扶養ラインに近づいています</div>' +
+      '繁忙期にシフトを増やすとラインを超える可能性があります。<br>' +
+      '健保組合によっては「見込み年収」で途中判定されることがあります。早めに確認してください。</div>';
+  }
+  advHtml += '<div class="advice-box blue"><div class="advice-title">💡 飲食店で多い誤解</div>' +
+    '「学生だから扶養は大丈夫」は<strong>誤り</strong>です。<br>' +
+    '税の壁と社保の壁は<strong>別の制度・別の基準</strong>です。<br>' +
+    '19〜22歳は2025年10月以降、両方150万円が新しい基準です。</div>';
+  advices.innerHTML = advHtml;
+}
+
+function buildFaq(isYoung, compSize) {
+  var faqs = [
+    {
+      q: '19〜22歳の社保の壁が150万円になったのはいつから？',
+      a: '2025年10月1日からです。19歳以上23歳未満の方（学生かどうかは問わず）の健康保険の扶養基準が、130万円未満から150万円未満に引き上げられました。税制改正（特定扶養控除）に合わせた変更です。'
+    },
+    {
+      q: '23歳になったら社保の壁はどうなりますか？',
+      a: '23歳の誕生日を迎えた翌年から、社会保険の扶養基準は130万円に戻ります。たとえば2025年に22歳でも、2025年12月31日時点で23歳の場合は対象外です。'
+    },
+    {
+      q: '「見込み年収」って何ですか？',
+      a: '健康保険組合が扶養の判定をする際、「今のペースで働き続けたら1年でいくらになるか」という予測で判断することがあります。例えば月収15万円で働き始めると、15万×12＝180万円と判定される場合があります。'
+    },
+    {
+      q: '税の壁と社保の壁、両方150万円ですか？（19〜22歳）',
+      a: isYoung
+        ? '19〜22歳は2025年以降、税金の壁（特定扶養控除）も社保の壁（健保の扶養基準）も、どちらも150万円が新しいボーダーです。ただし健保組合によって運用が異なる場合があります。'
+        : '19〜22歳の場合は両方150万円です。ただし18歳以下・23歳以上の方は、社保は130万円・税は103万円のままです。'
+    },
+    {
+      q: '106万円の壁は関係ありますか？',
+      a: compSize === 'large'
+        ? '大企業（101人以上）の場合、月収88,000円以上・週20時間以上などの条件に該当すると社保加入義務が発生します。150万円の引き上げとは別の制度です。'
+        : '現在は101人以上の大企業が対象のため、中小企業・飲食店は原則対象外です。ただし将来的に対象が拡大される予定です。'
+    }
+  ];
+
+  var html = '';
+  for (var i = 0; i < faqs.length; i++) {
+    html += '<div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Q. ' + faqs[i].q + '</div><div class="faq-a">A. ' + faqs[i].a + '</div></div>';
+  }
+  document.getElementById('faqArea').innerHTML = html;
+}
+
+function toggleFaq(el) {
+  el.classList.toggle('open');
+  el.nextElementSibling.classList.toggle('open');
+}
+</script>
+</body>
+</html>
